@@ -5,13 +5,18 @@ import { plainToClass } from "class-transformer";
 import ClientPublicGuard from "../../common/guard/client-public.guard";
 import ClientSecretGuard from "../../common/guard/client-secret.guard";
 import { IApiAuthRequestClientPublic } from "../../shared/interface/api/auth-request-client-public.interface";
+import { IApiAuthRequestClientSecret } from "../../shared/interface/api/auth-request-client-secret.interface";
 
 import ChallengeService from "./challenge.service";
 import { ChallengeSolveRequestBodyDTO } from "./dto/solve-request-body.dto";
 import { ChallengeSolveRequestParametersDTO } from "./dto/solve-request-parameters.dto";
 import { ChallengeSolveResponseBodyDTO } from "./dto/solve-response-body.dto";
+import { ChallengeVerifyRequestBodyDTO } from "./dto/verify-request-body.dto";
+import { ChallengeVerifyRequestParametersDTO } from "./dto/verify-request-parameters.dto";
+import { ChallengeVerifyResponseBodyDTO } from "./dto/verify-response-body.dto";
 import { Challenge } from "./entity/challenge.entity";
 import { IChallengeSolveResult } from "./interface/solve-result.interface";
+import { IChallengeVerifyResult } from "./interface/verify-result.interface";
 
 const config: IApiControllerProperties<Challenge> = {
 	entity: Challenge,
@@ -95,6 +100,34 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 					.catch((error: unknown) => {
 						throw error;
 					});
+			})
+			.catch((error: unknown) => {
+				throw error;
+			});
+	}
+
+	@ApiMethod({
+		action: EApiAction.VERIFY,
+		authentication: {
+			bearerStrategies: ["secretAuthorization"],
+			guard: ClientSecretGuard,
+			type: EApiAuthenticationType.USER,
+		},
+		entity: Challenge,
+		httpCode: HttpStatus.OK,
+		method: RequestMethod.POST,
+		path: "verify",
+		responses: { hasBadRequest: true, hasInternalServerError: true, hasNotFound: true, hasUnauthorized: true },
+		responseType: ChallengeVerifyResponseBodyDTO,
+	})
+	verify(@Req() request: IApiAuthRequestClientSecret, @Param() parameters: ChallengeVerifyRequestParametersDTO, @Body() body: ChallengeVerifyRequestBodyDTO): Promise<ChallengeVerifyResponseBodyDTO> {
+		return this.service
+			.get({ where: { client: { id: request.user.id }, id: parameters.challenge, token: body.token } })
+			.then((challenge: Challenge) => {
+				return plainToClass(ChallengeVerifyResponseBodyDTO, this.service.verify({ challenge }), {
+					// eslint-disable-next-line @elsikora/typescript/naming-convention
+					excludeExtraneousValues: true,
+				});
 			})
 			.catch((error: unknown) => {
 				throw error;

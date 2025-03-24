@@ -75,7 +75,7 @@ export class Challenge {
 
 	@ApiPropertyDescribe({
 		dataType: Object,
-		description: "data",
+		description: "solution",
 		properties: {
 			[EApiRouteType.CREATE]: {
 				[EApiDtoType.BODY]: {

@@ -9,7 +9,22 @@ const config: IApiControllerProperties<Client> = {
 	path: "client",
 	routes: {
 		[EApiRouteType.CREATE]: {
-			isEnabled: true,
+			isEnabled: false,
+		},
+		[EApiRouteType.DELETE]: {
+			isEnabled: false,
+		},
+		[EApiRouteType.GET]: {
+			isEnabled: false,
+		},
+		[EApiRouteType.GET_LIST]: {
+			isEnabled: false,
+		},
+		[EApiRouteType.PARTIAL_UPDATE]: {
+			isEnabled: false,
+		},
+		[EApiRouteType.UPDATE]: {
+			isEnabled: false,
 		},
 	},
 };
