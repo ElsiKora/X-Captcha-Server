@@ -10,13 +10,12 @@ import { IApiAuthRequestClientSecret } from "../../shared/interface/api/auth-req
 import ChallengeService from "./challenge.service";
 import { ChallengeSolveRequestBodyDTO } from "./dto/solve-request-body.dto";
 import { ChallengeSolveRequestParametersDTO } from "./dto/solve-request-parameters.dto";
-import { ChallengeSolveResponseBodyDTO } from "./dto/solve-response-body.dto";
+import { ChallengeSolveResponseDTO } from "./dto/solve-response.dto";
 import { ChallengeVerifyRequestBodyDTO } from "./dto/verify-request-body.dto";
 import { ChallengeVerifyRequestParametersDTO } from "./dto/verify-request-parameters.dto";
-import { ChallengeVerifyResponseBodyDTO } from "./dto/verify-response-body.dto";
+import { ChallengeVerifyResponseDTO } from "./dto/verify-response.dto";
 import { Challenge } from "./entity/challenge.entity";
 import { IChallengeSolveResult } from "./interface/solve-result.interface";
-import { IChallengeVerifyResult } from "./interface/verify-result.interface";
 
 const config: IApiControllerProperties<Challenge> = {
 	entity: Challenge,
@@ -47,12 +46,7 @@ const config: IApiControllerProperties<Challenge> = {
 			isEnabled: false,
 		},
 		[EApiRouteType.GET]: {
-			authentication: {
-				bearerStrategies: ["secretAuthorization"],
-				guard: ClientSecretGuard,
-				type: EApiAuthenticationType.USER,
-			},
-			isEnabled: true,
+			isEnabled: false,
 		},
 		[EApiRouteType.GET_LIST]: {
 			isEnabled: false,
@@ -61,7 +55,8 @@ const config: IApiControllerProperties<Challenge> = {
 			isEnabled: false,
 		},
 		[EApiRouteType.UPDATE]: {
-			isEnabled: false,
+			isEnabled: true,
+			shouldWriteToController: false,
 		},
 	},
 };
@@ -75,7 +70,6 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 		authentication: {
 			bearerStrategies: ["publicAuthorization"],
 			guard: ClientPublicGuard,
-			securityStrategies: ["accountRequestSignature", "accountRequestTimestamp"],
 			type: EApiAuthenticationType.USER,
 		},
 		entity: Challenge,
@@ -83,16 +77,16 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 		method: RequestMethod.POST,
 		path: ":challenge/solve",
 		responses: { hasBadRequest: true, hasConflict: true, hasInternalServerError: true, hasNotFound: true, hasUnauthorized: true },
-		responseType: ChallengeSolveResponseBodyDTO,
+		responseType: ChallengeSolveResponseDTO,
 	})
-	solve(@Req() request: IApiAuthRequestClientPublic, @Param() parameters: ChallengeSolveRequestParametersDTO, @Body() body: ChallengeSolveRequestBodyDTO): Promise<ChallengeSolveResponseBodyDTO> {
+	solve(@Req() request: IApiAuthRequestClientPublic, @Param() parameters: ChallengeSolveRequestParametersDTO, @Body() body: ChallengeSolveRequestBodyDTO): Promise<ChallengeSolveResponseDTO> {
 		return this.service
 			.get({ where: { client: { id: request.user.id }, id: parameters.challenge } })
 			.then(async (challenge: Challenge) => {
 				return this.service
 					.solve({ challenge, solution: body.solution })
 					.then((response: IChallengeSolveResult) => {
-						return plainToClass(ChallengeSolveResponseBodyDTO, response, {
+						return plainToClass(ChallengeSolveResponseDTO, response, {
 							// eslint-disable-next-line @elsikora/typescript/naming-convention
 							excludeExtraneousValues: true,
 						});
@@ -116,15 +110,15 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 		entity: Challenge,
 		httpCode: HttpStatus.OK,
 		method: RequestMethod.POST,
-		path: "verify",
+		path: ":challenge/verify",
 		responses: { hasBadRequest: true, hasInternalServerError: true, hasNotFound: true, hasUnauthorized: true },
-		responseType: ChallengeVerifyResponseBodyDTO,
+		responseType: ChallengeVerifyResponseDTO,
 	})
-	verify(@Req() request: IApiAuthRequestClientSecret, @Param() parameters: ChallengeVerifyRequestParametersDTO, @Body() body: ChallengeVerifyRequestBodyDTO): Promise<ChallengeVerifyResponseBodyDTO> {
+	verify(@Req() request: IApiAuthRequestClientSecret, @Param() parameters: ChallengeVerifyRequestParametersDTO, @Body() body: ChallengeVerifyRequestBodyDTO): Promise<ChallengeVerifyResponseDTO> {
 		return this.service
 			.get({ where: { client: { id: request.user.id }, id: parameters.challenge, token: body.token } })
 			.then((challenge: Challenge) => {
-				return plainToClass(ChallengeVerifyResponseBodyDTO, this.service.verify({ challenge }), {
+				return plainToClass(ChallengeVerifyResponseDTO, this.service.verify({ challenge }), {
 					// eslint-disable-next-line @elsikora/typescript/naming-convention
 					excludeExtraneousValues: true,
 				});

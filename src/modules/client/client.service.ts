@@ -3,6 +3,8 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 
+import { ECaptchaType } from "../../shared/enum/captcha-type.enum";
+
 import { Client } from "./entity/client.entity";
 
 @ApiService({ entity: Client })
@@ -13,5 +15,9 @@ export default class ClientService extends ApiServiceBase<Client> {
 		private readonly repository: Repository<Client>,
 	) {
 		super();
+	}
+
+	hasChallengeType(client: Client, challengeType: ECaptchaType): boolean {
+		return client.challengeType.includes(challengeType);
 	}
 }

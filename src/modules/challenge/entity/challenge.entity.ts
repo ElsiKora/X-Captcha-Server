@@ -4,6 +4,14 @@ import { Column, CreateDateColumn, Entity, Generated, Index, JoinColumn, ManyToO
 
 import { ECaptchaType } from "../../../shared/enum/captcha-type.enum";
 import { Client } from "../../client/entity/client.entity";
+import { ChallengeDataClickDynamicDto } from "../dynamic-dto/data-click.dynamic-dto";
+import { ChallengeDataPowDynamicDto } from "../dynamic-dto/data-pow.dynamic-dto";
+import { ChallengeSolutionClickDynamicDto } from "../dynamic-dto/solution-click.dynamic-dto";
+import { ChallengeSolutionPowDynamicDto } from "../dynamic-dto/solution-pow.dynamic-dto";
+import { IChallengeDataClick } from "../interface/data-click.interface";
+import { IChallengeDataPow } from "../interface/data-pow.interface";
+import { IChallengeSolutionClick } from "../interface/solution-click.interface";
+import { IChallengeSolutionPow } from "../interface/solution-pow.interface";
 
 @Entity()
 export class Challenge {
@@ -12,6 +20,10 @@ export class Challenge {
 		properties: {
 			[EApiRouteType.CREATE]: {
 				[EApiDtoType.BODY]: {
+					isEnabled: false,
+					isRequired: false,
+				},
+				[EApiDtoType.RESPONSE]: {
 					isEnabled: false,
 					isRequired: false,
 				},
@@ -37,8 +49,17 @@ export class Challenge {
 	createdAt!: Date;
 
 	@ApiPropertyDescribe({
-		dataType: Object,
+		dataType: { [ECaptchaType.CLICK]: ChallengeDataClickDynamicDto, [ECaptchaType.POW]: ChallengeDataPowDynamicDto },
 		description: "data",
+		discriminator: {
+			mapping: {
+				[ECaptchaType.CLICK]: ECaptchaType.CLICK,
+				[ECaptchaType.POW]: ECaptchaType.POW,
+			},
+			propertyName: "type",
+			shouldKeepDiscriminatorProperty: true,
+		},
+		isDynamicallyGenerated: true,
 		properties: {
 			[EApiRouteType.CREATE]: {
 				[EApiDtoType.BODY]: {
@@ -47,10 +68,11 @@ export class Challenge {
 				},
 			},
 		},
+		shouldValidateNested: true,
 		type: EApiPropertyDescribeType.OBJECT,
 	})
 	@Column({ default: {}, nullable: false, type: "jsonb" })
-	data: any;
+	data!: IChallengeDataClick | IChallengeDataPow;
 
 	@ApiPropertyDescribe({
 		type: EApiPropertyDescribeType.UUID,
@@ -66,6 +88,10 @@ export class Challenge {
 					isEnabled: false,
 					isRequired: false,
 				},
+				[EApiDtoType.RESPONSE]: {
+					isEnabled: false,
+					isRequired: false,
+				},
 			},
 		},
 		type: EApiPropertyDescribeType.BOOLEAN,
@@ -74,26 +100,44 @@ export class Challenge {
 	isSolved!: boolean;
 
 	@ApiPropertyDescribe({
-		dataType: Object,
+		dataType: { [ECaptchaType.CLICK]: ChallengeSolutionClickDynamicDto, [ECaptchaType.POW]: ChallengeSolutionPowDynamicDto },
 		description: "solution",
+		discriminator: {
+			mapping: {
+				[ECaptchaType.CLICK]: ECaptchaType.CLICK,
+				[ECaptchaType.POW]: ECaptchaType.POW,
+			},
+			propertyName: "type",
+			shouldKeepDiscriminatorProperty: true,
+		},
+		isDynamicallyGenerated: true,
 		properties: {
 			[EApiRouteType.CREATE]: {
 				[EApiDtoType.BODY]: {
 					isEnabled: false,
 					isRequired: false,
 				},
+				[EApiDtoType.RESPONSE]: {
+					isEnabled: false,
+					isRequired: false,
+				},
 			},
 		},
+		shouldValidateNested: true,
 		type: EApiPropertyDescribeType.OBJECT,
 	})
 	@Column({ default: {}, nullable: false, type: "jsonb" })
-	solution: any;
+	solution!: IChallengeSolutionClick | IChallengeSolutionPow;
 
 	@ApiPropertyDescribe({
 		description: "solution token",
 		properties: {
 			[EApiRouteType.CREATE]: {
 				[EApiDtoType.BODY]: {
+					isEnabled: false,
+					isRequired: false,
+				},
+				[EApiDtoType.RESPONSE]: {
 					isEnabled: false,
 					isRequired: false,
 				},

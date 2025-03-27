@@ -2,12 +2,33 @@
 import { ApiPropertyDescribe, EApiDtoType, EApiPropertyDateIdentifier, EApiPropertyDateType, EApiPropertyDescribeType, EApiPropertyStringType, EApiRouteType } from "@elsikora/nestjs-crud-automator";
 import { Column, CreateDateColumn, Entity, Generated, Index, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
+import { ECaptchaType } from "../../../shared/enum/captcha-type.enum";
 import { Challenge } from "../../challenge/entity/challenge.entity";
 
 @Entity()
 export class Client {
 	@OneToMany(() => Challenge, (entity: Challenge) => entity.client)
 	challenges!: Array<Challenge>;
+
+	// eslint-disable-next-line @elsikora/typeorm/enforce-column-types
+	@ApiPropertyDescribe({
+		description: "challenge types enabled",
+		enum: ECaptchaType,
+		enumName: "ECaptchaType",
+		isArray: true,
+		isUniqueItems: true,
+		maxItems: 100,
+		minItems: 1,
+		type: EApiPropertyDescribeType.ENUM,
+	})
+	@Column({
+		array: true,
+		default: [],
+		enum: ECaptchaType,
+		nullable: true,
+		type: "enum",
+	})
+	challengeType!: Array<ECaptchaType>;
 
 	@ApiPropertyDescribe({
 		format: EApiPropertyDateType.DATE_TIME,

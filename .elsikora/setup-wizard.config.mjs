@@ -1,18 +1,18 @@
 export default {
 	ci: {
 		isEnabled: true,
-		isNpmPackage: true,
+		isNpmPackage: false,
 		moduleProperties: {
 			dependabot: {
 				devBranchName: "dev",
 			},
-			"release-npm": {
-				isPrerelease: true,
+			release: {
 				mainBranch: "main",
+				isPrerelease: true,
 				preReleaseBranch: "dev",
 			},
 		},
-		modules: ["codecommit-sync", "dependabot", "qodana", "release-npm", "snyk"],
+		modules: ["codecommit-sync", "dependabot", "qodana", "release", "snyk"],
 		provider: "GitHub",
 	},
 	commitlint: {

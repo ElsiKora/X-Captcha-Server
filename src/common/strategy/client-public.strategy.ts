@@ -23,8 +23,6 @@ export default class ClientPublicStrategy extends PassportStrategy(Strategy, "cl
 
 		return this.validateRequestData(publicKey)
 			.then((client: Client) => {
-				console.log("CLIENT GOT", client);
-
 				return client;
 			})
 			.catch((error: unknown) => {

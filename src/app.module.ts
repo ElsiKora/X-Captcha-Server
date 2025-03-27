@@ -2,6 +2,7 @@ import { ParameterStoreConfigModule } from "@elsikora/nestjs-aws-parameter-store
 import { TypeOrmAwsConnectorModule, TypeOrmAwsConnectorService } from "@elsikora/nestjs-typeorm-aws-connector";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { ChallengeModule } from "./modules/challenge/challenge.module";
@@ -17,6 +18,7 @@ import CONFIG_CONSTANT from "./shared/constant/config.constant";
 		ConfigModule.forRoot({
 			isGlobal: true,
 		}),
+		EventEmitterModule.forRoot(),
 		ParameterStoreConfigModule.registerAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
