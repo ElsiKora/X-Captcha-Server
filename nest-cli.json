@@ -1,0 +1,18 @@
+{
+	"collection": "@nestjs/schematics",
+	"compilerOptions": {
+		"assets": ["**/*.proto"],
+		"deleteOutDir": true,
+		"plugins": [
+			{
+				"name": "@nestjs/swagger",
+				"options": {
+					"classValidatorShim": true,
+					"dtoFileNameSuffix": [".dto.ts", ".entity.ts"],
+					"introspectComments": true
+				}
+			}
+		]
+	},
+	"sourceRoot": "src"
+}
