@@ -28,7 +28,7 @@ export default class ConfigSwagger {
 			.setLicense("Apache 2.0", "https://www.apache.org/licenses/LICENSE-2.0.html")
 			.setTermsOfService(this.APPLICATION.get(ParameterStoreConfigService).get({ path: ["api", "terms-url"], service: EService.REAPER }) ?? "")
 			.setVersion(this.APPLICATION.get(ParameterStoreConfigService).get({ path: ["api", "version"], service: EService.REAPER }) ?? "1.0")
-			.addServer(this.APPLICATION.get(ConfigService).get<string>("NODE_ENV") === "production" ? (this.APPLICATION.get(ParameterStoreConfigService).get({ path: ["api", "url"], service: EService.REAPER }) ?? "") : "http://127.0.0.1:4000")
+			.addServer(this.APPLICATION.get(ConfigService).get<string>("NODE_ENV") === "production" ? (this.APPLICATION.get(ParameterStoreConfigService).get({ path: ["api", "url"], service: EService.REAPER }) ?? "") : "http://127.0.0.1:3000")
 			.addApiKey(
 				{
 					description: "Public key",

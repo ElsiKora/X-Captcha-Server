@@ -33,7 +33,7 @@ export class Challenge {
 	})
 	@Index()
 	@JoinColumn()
-	@ManyToOne(() => Client, (entity: Client) => entity.challenges, {
+	@ManyToOne(() => Client, {
 		eager: false,
 		nullable: false,
 		onDelete: "CASCADE",

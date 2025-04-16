@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "packages": {
+    "@elsikora/nestjs-crud-config": {
+      "signature": "edd6be6b8f04de4ceb90f36e29a9d148",
+      "file": true
+    },
+    "@elsikora/nestjs-crud-automator": {
+      "signature": "08ce8e8b8ac4d9502eedc03e9952efff",
+      "file": true,
+      "replaced": "^1.9.0"
+    }
+  }
+}

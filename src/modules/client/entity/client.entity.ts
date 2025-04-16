@@ -3,13 +3,9 @@ import { ApiPropertyDescribe, EApiDtoType, EApiPropertyDateIdentifier, EApiPrope
 import { Column, CreateDateColumn, Entity, Generated, Index, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { ECaptchaType } from "../../../shared/enum/captcha-type.enum";
-import { Challenge } from "../../challenge/entity/challenge.entity";
 
 @Entity()
 export class Client {
-	@OneToMany(() => Challenge, (entity: Challenge) => entity.client)
-	challenges!: Array<Challenge>;
-
 	// eslint-disable-next-line @elsikora/typeorm/enforce-column-types
 	@ApiPropertyDescribe({
 		description: "challenge types enabled",

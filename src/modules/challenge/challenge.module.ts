@@ -1,10 +1,11 @@
+import { ApiSubscriberModule } from "@elsikora/nestjs-crud-automator";
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { ClientModule } from "../client/client.module";
 
 import { ChallengeController } from "./challenge.controller";
-import ChallengeService from "./challenge.service";
+import { ChallengeService } from "./challenge.service";
 import { Challenge } from "./entity/challenge.entity";
 import { ChallengeAfterInsertListener } from "./listener/after-insert.listener";
 import { ChallengeBeforeInsertListener } from "./listener/before-insert.listener";

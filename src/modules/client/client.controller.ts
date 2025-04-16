@@ -18,7 +18,7 @@ const config: IApiControllerProperties<Client> = {
 			isEnabled: false,
 		},
 		[EApiRouteType.GET_LIST]: {
-			isEnabled: false,
+			isEnabled: true,
 		},
 		[EApiRouteType.PARTIAL_UPDATE]: {
 			isEnabled: false,

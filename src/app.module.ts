@@ -1,4 +1,6 @@
 import { ParameterStoreConfigModule } from "@elsikora/nestjs-aws-parameter-store-config";
+import { ApiSubscriberModule } from "@elsikora/nestjs-crud-automator";
+import { ConfigData, ConfigSection, CrudConfigModule } from "@elsikora/nestjs-crud-config";
 import { TypeOrmAwsConnectorModule, TypeOrmAwsConnectorService } from "@elsikora/nestjs-typeorm-aws-connector";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
@@ -17,6 +19,22 @@ import CONFIG_CONSTANT from "./shared/constant/config.constant";
 		ClientModule,
 		ConfigModule.forRoot({
 			isGlobal: true,
+		}),
+		CrudConfigModule.register({
+			application: "my-app",
+			// Optional entity customization
+			entityOptions: {
+				configData: {
+					maxValueLength: 16_384, // Increase max value length
+					tableName: "configuration_data", // Custom table name
+				},
+				configSection: {
+					maxNameLength: 256, // Customize field length
+				},
+				tablePrefix: "app_", // Adds prefix to table names
+			},
+			environment: "development",
+			isVerbose: true,
 		}),
 		EventEmitterModule.forRoot(),
 		ParameterStoreConfigModule.registerAsync({
@@ -41,7 +59,7 @@ import CONFIG_CONSTANT from "./shared/constant/config.constant";
 				return {
 					connectionTimeoutMs: CONFIG_CONSTANT.DB_CONNECTION_TIMEOUT,
 					databaseName: CONFIG_CONSTANT.DB_DATABASE_NAME,
-					entities: [Challenge, Client],
+					entities: [Challenge, Client, ConfigSection, ConfigData],
 					idleTimeoutMs: CONFIG_CONSTANT.DB_IDLE_TIMEOUT,
 					isVerbose: CONFIG_CONSTANT.IS_DATABASE_LOGGING_ENABLED,
 					poolSize: CONFIG_CONSTANT.DB_POOL_SIZE,

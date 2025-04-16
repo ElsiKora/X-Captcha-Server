@@ -1,6 +1,7 @@
 import * as crypto from "node:crypto";
 
-import { ApiService, ApiServiceBase, EErrorStringAction, EErrorStringCompositeAction, ErrorString } from "@elsikora/nestjs-crud-automator";
+import { ApiService, ApiServiceBase, ApiServiceObservable, EErrorStringAction, EErrorStringCompositeAction, ErrorString } from "@elsikora/nestjs-crud-automator";
+import { CrudConfigService } from "@elsikora/nestjs-crud-config";
 import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -17,11 +18,13 @@ import { IChallengeVerifyProperties } from "./interface/verify-properties.interf
 import { IChallengeVerifyResult } from "./interface/verify-result.interface";
 
 @ApiService({ entity: Challenge })
+@ApiServiceObservable()
 @Injectable()
-export default class ChallengeService extends ApiServiceBase<Challenge> {
+export class ChallengeService extends ApiServiceBase<Challenge> {
 	constructor(
 		@InjectRepository(Challenge)
 		private readonly repository: Repository<Challenge>,
+		private readonly crudConfigService: CrudConfigService,
 	) {
 		super();
 	}
