@@ -29,7 +29,7 @@
 		"migration:generate": "npm run typeorm -- migration:generate -d ./src/data-source.ts",
 		"migration:revert": "npm run typeorm -- migration:revert -d ./src/data-source.ts",
 		"migration:run": "npm run typeorm -- migration:run -d ./src/data-source.ts",
-		"prepare": "husky",
+		"prepare": "test \"$IS_PRODUCTION\" != 'true' && husky || true",
 		"release": "semantic-release",
 		"start": "node dist/main.js",
 		"start:debug": "nest start --debug --watch",
