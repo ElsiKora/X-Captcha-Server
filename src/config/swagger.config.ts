@@ -28,7 +28,7 @@ export default class ConfigSwagger {
 			.setLicense("Apache 2.0", "https://www.apache.org/licenses/LICENSE-2.0.html")
 			.setTermsOfService(this.APPLICATION.get(ParameterStoreConfigService).get({ path: ["api", "terms-url"], service: EService.REAPER }) ?? "")
 			.setVersion(this.APPLICATION.get(ParameterStoreConfigService).get({ path: ["api", "version"], service: EService.REAPER }) ?? "1.0")
-			.addServer(this.APPLICATION.get(ConfigService).get<string>("NODE_ENV") === "production" ? (this.APPLICATION.get(ParameterStoreConfigService).get({ path: ["api", "url"], service: EService.REAPER }) ?? "") : "http://127.0.0.1:4000")
+			.addServer(this.APPLICATION.get(ConfigService).get<string>("NODE_ENV") === "production" ? (this.APPLICATION.get(ParameterStoreConfigService).get({ path: ["api", "url"], service: EService.REAPER }) ?? "") : "http://127.0.0.1:3000")
 			.addApiKey(
 				{
 					description: "Public key",
@@ -51,9 +51,8 @@ export default class ConfigSwagger {
 
 		SwaggerModule.setup("api", this.APPLICATION, document, {
 			swaggerOptions: {
-				// eslint-disable-next-line @elsikora/typescript/naming-convention
 				deepScanRoutes: CONFIG_SWAGGER_CONSTANT.SHOULD_DEEP_SCAN_ROUTES,
-				// eslint-disable-next-line @elsikora/typescript/naming-convention
+
 				displayRequestDuration: CONFIG_SWAGGER_CONSTANT.SHOULD_DISPLAY_REQUEST_DURATION,
 				operationsSorter: CONFIG_SWAGGER_CONSTANT.OPERATIONS_SORTER,
 				tagsSorter: CONFIG_SWAGGER_CONSTANT.TAGS_SORTER,

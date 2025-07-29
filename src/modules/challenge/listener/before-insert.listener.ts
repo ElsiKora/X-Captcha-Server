@@ -4,7 +4,7 @@ import { OnEvent } from "@nestjs/event-emitter";
 
 import { IEventEmitterResponse } from "../../../shared/interface/event-emitter-response.interface";
 import ClientService from "../../client/client.service";
-import ChallengeService from "../challenge.service";
+import { ChallengeService } from "../challenge.service";
 import { Challenge } from "../entity/challenge.entity";
 import ChallengeEventBeforeInsert from "../event/before-insert.event";
 

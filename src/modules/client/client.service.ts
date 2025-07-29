@@ -1,4 +1,4 @@
-import { ApiService, ApiServiceBase } from "@elsikora/nestjs-crud-automator";
+import { ApiService, ApiServiceBase, ApiServiceObservable } from "@elsikora/nestjs-crud-automator";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -8,6 +8,7 @@ import { ECaptchaType } from "../../shared/enum/captcha-type.enum";
 import { Client } from "./entity/client.entity";
 
 @ApiService({ entity: Client })
+@ApiServiceObservable()
 @Injectable()
 export default class ClientService extends ApiServiceBase<Client> {
 	constructor(

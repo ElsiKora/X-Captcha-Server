@@ -1,4 +1,3 @@
-/* eslint-disable @elsikora/typescript/naming-convention */
 import { ApiPropertyDescribe, EApiDtoType, EApiPropertyDateIdentifier, EApiPropertyDateType, EApiPropertyDescribeType, EApiRouteType } from "@elsikora/nestjs-crud-automator";
 import { Column, CreateDateColumn, Entity, Generated, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
@@ -33,7 +32,7 @@ export class Challenge {
 	})
 	@Index()
 	@JoinColumn()
-	@ManyToOne(() => Client, (entity: Client) => entity.challenges, {
+	@ManyToOne(() => Client, {
 		eager: false,
 		nullable: false,
 		onDelete: "CASCADE",
@@ -75,6 +74,15 @@ export class Challenge {
 	data!: IChallengeDataClick | IChallengeDataPow;
 
 	@ApiPropertyDescribe({
+		properties: {
+			[EApiRouteType.GET_LIST]: {
+				[EApiDtoType.QUERY]: {
+					isEnabled: false,
+					isRequired: false,
+					useAsOrderByFilter: true,
+				},
+			},
+		},
 		type: EApiPropertyDescribeType.UUID,
 	})
 	@PrimaryGeneratedColumn("uuid")

@@ -1,4 +1,4 @@
-import { ApiController, EApiRouteType, IApiControllerBase, IApiControllerProperties } from "@elsikora/nestjs-crud-automator";
+import { ApiController, ApiControllerObservable, EApiRouteType, IApiControllerBase, IApiControllerProperties } from "@elsikora/nestjs-crud-automator";
 
 import ClientService from "./client.service";
 import { Client } from "./entity/client.entity";
@@ -30,6 +30,7 @@ const config: IApiControllerProperties<Client> = {
 };
 
 @ApiController<Client>(config)
+@ApiControllerObservable()
 export default class ClientController implements IApiControllerBase<Client> {
 	constructor(public service: ClientService) {}
 }

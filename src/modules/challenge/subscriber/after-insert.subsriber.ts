@@ -6,7 +6,7 @@ import { HttpException, Inject, InternalServerErrorException } from "@nestjs/com
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { DataSource, EventSubscriber } from "typeorm";
 
-import ChallengeService from "../challenge.service";
+import { ChallengeService } from "../challenge.service";
 import { Challenge } from "../entity/challenge.entity";
 import ChallengeEventAfterInsert from "../event/after-insert.event";
 

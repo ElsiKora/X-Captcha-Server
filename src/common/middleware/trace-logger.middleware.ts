@@ -43,10 +43,10 @@ export default class TraceLoggerMiddleware implements NestMiddleware {
 		const correlationHeader: Array<string> | string = headers["x-correlation-id"] ?? uuid();
 		response.setHeader("X-Correlation-Id", correlationHeader);
 
-		const bodyChunks: Array<any> = [];
+		const bodyChunks: Array<Uint8Array> = [];
 		let bodyString: string;
 
-		request.on("data", (chunk: any) => {
+		request.on("data", (chunk: Uint8Array) => {
 			bodyChunks.push(chunk);
 		});
 

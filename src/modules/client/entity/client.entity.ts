@@ -1,15 +1,10 @@
-/* eslint-disable @elsikora/typescript/no-magic-numbers,@elsikora/typescript/naming-convention */
 import { ApiPropertyDescribe, EApiDtoType, EApiPropertyDateIdentifier, EApiPropertyDateType, EApiPropertyDescribeType, EApiPropertyStringType, EApiRouteType } from "@elsikora/nestjs-crud-automator";
-import { Column, CreateDateColumn, Entity, Generated, Index, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Generated, Index, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { ECaptchaType } from "../../../shared/enum/captcha-type.enum";
-import { Challenge } from "../../challenge/entity/challenge.entity";
 
 @Entity()
 export class Client {
-	@OneToMany(() => Challenge, (entity: Challenge) => entity.client)
-	challenges!: Array<Challenge>;
-
 	// eslint-disable-next-line @elsikora/typeorm/enforce-column-types
 	@ApiPropertyDescribe({
 		description: "challenge types enabled",
@@ -33,6 +28,13 @@ export class Client {
 	@ApiPropertyDescribe({
 		format: EApiPropertyDateType.DATE_TIME,
 		identifier: EApiPropertyDateIdentifier.CREATED_AT,
+		properties: {
+			[EApiRouteType.GET_LIST]: {
+				[EApiDtoType.QUERY]: {
+					useAsOrderByFilter: false,
+				},
+			},
+		},
 		type: EApiPropertyDescribeType.DATE,
 	})
 	@CreateDateColumn({ default: () => "CURRENT_TIMESTAMP", nullable: false, type: "timestamp" })

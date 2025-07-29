@@ -15,7 +15,7 @@ export default class ClientSecretStrategy extends PassportStrategy(Strategy, "cl
 		super();
 	}
 
-	async validate(request: Request): Promise<any> {
+	async validate(request: Request): Promise<Client> {
 		const secretcKey: string = request.headers["x-secret-key"] as string;
 
 		return this.validateRequestData(secretcKey)

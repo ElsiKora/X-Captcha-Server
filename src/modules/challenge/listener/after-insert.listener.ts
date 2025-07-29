@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 
 import { IEventEmitterResponse } from "../../../shared/interface/event-emitter-response.interface";
-import ChallengeService from "../challenge.service";
+import { ChallengeService } from "../challenge.service";
 import ChallengeEventAfterInsert from "../event/after-insert.event";
 
 @Injectable()
