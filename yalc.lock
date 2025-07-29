@@ -2,11 +2,12 @@
   "version": "v1",
   "packages": {
     "@elsikora/nestjs-crud-config": {
-      "signature": "edd6be6b8f04de4ceb90f36e29a9d148",
-      "file": true
+      "signature": "4545adee21c24ed34d206745f7de5e06",
+      "file": true,
+      "replaced": "^1.1.0"
     },
     "@elsikora/nestjs-crud-automator": {
-      "signature": "08ce8e8b8ac4d9502eedc03e9952efff",
+      "signature": "d15c30224016e1915ab052a9bf8f8c72",
       "file": true,
       "replaced": "^1.9.0"
     }

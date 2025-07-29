@@ -1,6 +1,6 @@
-import { ParameterStoreConfigModule } from "@elsikora/nestjs-aws-parameter-store-config";
+import { EService, ParameterStoreConfigModule, ParameterStoreConfigService } from "@elsikora/nestjs-aws-parameter-store-config";
 import { ApiSubscriberModule } from "@elsikora/nestjs-crud-automator";
-import { ConfigData, ConfigSection, CrudConfigModule } from "@elsikora/nestjs-crud-config";
+import { CrudConfigModule, TOKEN_CONSTANT } from "@elsikora/nestjs-crud-config";
 import { TypeOrmAwsConnectorModule, TypeOrmAwsConnectorService } from "@elsikora/nestjs-typeorm-aws-connector";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
@@ -15,26 +15,40 @@ import CONFIG_CONSTANT from "./shared/constant/config.constant";
 
 @Module({
 	imports: [
+		ApiSubscriberModule,
 		ChallengeModule,
 		ClientModule,
 		ConfigModule.forRoot({
 			isGlobal: true,
 		}),
-		CrudConfigModule.register({
-			application: "my-app",
-			// Optional entity customization
-			entityOptions: {
-				configData: {
-					maxValueLength: 16_384, // Increase max value length
-					tableName: "configuration_data", // Custom table name
-				},
-				configSection: {
-					maxNameLength: 256, // Customize field length
-				},
-				tablePrefix: "app_", // Adds prefix to table names
+		CrudConfigModule.registerAsync({
+			imports: [ParameterStoreConfigModule],
+			inject: [ParameterStoreConfigService],
+			useFactory: (parameterStoreConfigService: ParameterStoreConfigService) => {
+				return {
+					cacheOptions: {
+						isEnabled: true,
+					},
+					encryptionOptions: {
+						encryptionKey:
+							parameterStoreConfigService.get({
+								path: ["crud-config/encryption-key"],
+								service: EService.REAPER,
+							}) ?? undefined,
+						isEnabled: true,
+					},
+					environment: "production",
+					migrationOptions: {
+						isEnabled: true,
+						migrations: [
+							// initialAppConfigMigration,
+						],
+						shouldRunOnStartup: true,
+						useTransaction: true,
+					},
+					shouldAutoCreateSections: true,
+				};
 			},
-			environment: "development",
-			isVerbose: true,
 		}),
 		EventEmitterModule.forRoot(),
 		ParameterStoreConfigModule.registerAsync({
@@ -53,13 +67,13 @@ import CONFIG_CONSTANT from "./shared/constant/config.constant";
 			},
 		}),
 		TypeOrmAwsConnectorModule.registerAsync({
-			imports: [ConfigModule],
-			inject: [ConfigService],
-			useFactory: (config: ConfigService) => {
+			imports: [ConfigModule, CrudConfigModule],
+			inject: [TOKEN_CONSTANT.CONFIG_SECTION_ENTITY, TOKEN_CONSTANT.CONFIG_DATA_ENTITY, TOKEN_CONSTANT.CONFIG_MIGRATION_ENTITY],
+			useFactory: (sectionEntity, dataEntity, migrationEntity) => {
 				return {
 					connectionTimeoutMs: CONFIG_CONSTANT.DB_CONNECTION_TIMEOUT,
 					databaseName: CONFIG_CONSTANT.DB_DATABASE_NAME,
-					entities: [Challenge, Client, ConfigSection, ConfigData],
+					entities: [Challenge, Client, sectionEntity, dataEntity, migrationEntity],
 					idleTimeoutMs: CONFIG_CONSTANT.DB_IDLE_TIMEOUT,
 					isVerbose: CONFIG_CONSTANT.IS_DATABASE_LOGGING_ENABLED,
 					poolSize: CONFIG_CONSTANT.DB_POOL_SIZE,

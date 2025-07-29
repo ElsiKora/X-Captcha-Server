@@ -1,3 +1,5 @@
+import type { IConfigData } from "@elsikora/nestjs-crud-config";
+
 import * as crypto from "node:crypto";
 
 import { ApiService, ApiServiceBase, ApiServiceObservable, EErrorStringAction, EErrorStringCompositeAction, ErrorString } from "@elsikora/nestjs-crud-automator";
@@ -29,14 +31,13 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 		super();
 	}
 
-	setUpChallenge(challenge: Challenge, eventManager: EntityManager): Promise<Challenge> {
+	async setUpChallenge(challenge: Challenge, eventManager: EntityManager): Promise<Challenge> {
 		switch (challenge.type) {
 			case ECaptchaType.CLICK: {
 				return this.update(
 					{ id: challenge.id },
 					{
 						data: {
-							// eslint-disable-next-line @elsikora/typescript/naming-convention
 							challenge: true,
 							type: ECaptchaType.CLICK,
 						},
@@ -46,14 +47,14 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 			}
 
 			case ECaptchaType.POW: {
+				const powCaptchaDifficulty: IConfigData = await this.crudConfigService.get({ name: "captchaTtlMs", section: "challenge" });
+
 				return this.update(
 					{ id: challenge.id },
 					{
 						data: {
-							// eslint-disable-next-line @elsikora/typescript/no-magic-numbers
 							challenge: crypto.randomBytes(16).toString("hex"),
-							// eslint-disable-next-line @elsikora/typescript/no-magic-numbers
-							difficulty: 5,
+							difficulty: Number.parseInt(powCaptchaDifficulty.value),
 							type: ECaptchaType.POW,
 						},
 					},
@@ -78,8 +79,9 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 			throw new BadRequestException(ErrorString({ entity: Challenge, property: "SOLUTION", type: EErrorStringCompositeAction.INVALID_FORMAT }));
 		}
 
-		// eslint-disable-next-line @elsikora/typescript/no-magic-numbers
-		if (+new Date(challenge.createdAt) + 60_000 > Date.now()) {
+		const captchaTtlMs: IConfigData = await this.crudConfigService.get({ name: "captchaTtlMs", section: "challenge" });
+
+		if (+new Date(challenge.createdAt) + Number.parseInt(captchaTtlMs.value) < Date.now()) {
 			throw new BadRequestException(ErrorString({ entity: Challenge, type: EErrorStringAction.EXPIRED }));
 		}
 

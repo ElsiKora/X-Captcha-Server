@@ -6,7 +6,6 @@ import { HttpException, Inject, InternalServerErrorException } from "@nestjs/com
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { DataSource, EventSubscriber } from "typeorm";
 
-import { ChallengeService } from "../challenge.service";
 import { Challenge } from "../entity/challenge.entity";
 import ChallengeEventBeforeInsert from "../event/before-insert.event";
 
@@ -15,7 +14,6 @@ export default class ChallengeBeforeInsertSubscriber implements EntitySubscriber
 	constructor(
 		private readonly eventEmitter: EventEmitter2,
 		@Inject(DataSource) readonly connection: DataSource,
-		private readonly service: ChallengeService,
 	) {
 		connection.subscribers.push(this);
 	}

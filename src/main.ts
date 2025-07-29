@@ -1,4 +1,3 @@
-/* eslint-disable @elsikora/typescript/naming-convention */
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 
 import { EService, ParameterStoreConfigService } from "@elsikora/nestjs-aws-parameter-store-config";
@@ -42,7 +41,7 @@ async function bootstrap(): Promise<number> {
 	application.useGlobalInterceptors(new CorrelationIDResponseBodyInterceptor());
 	application.enableCors();
 
-	await application.listen(Number(application.get(ParameterStoreConfigService).get({ path: ["api/port"], service: EService.REAPER })), application.get(ParameterStoreConfigService).get({ path: ["api/listener"], service: EService.REAPER }) ?? "0.0.0.0");
+	await application.listen(4000, application.get(ParameterStoreConfigService).get({ path: ["api/listener"], service: EService.REAPER }) ?? "0.0.0.0");
 
 	return Number(application.get(ParameterStoreConfigService).get({ path: ["api/port"], service: EService.REAPER }));
 }

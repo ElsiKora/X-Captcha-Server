@@ -1,4 +1,3 @@
-/* eslint-disable @elsikora/typescript/no-magic-numbers */
 import type { TApiPropertyDescribeProperties } from "@elsikora/nestjs-crud-automator";
 
 import { EApiPropertyStringType } from "@elsikora/nestjs-crud-automator";

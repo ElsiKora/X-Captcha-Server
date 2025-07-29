@@ -88,7 +88,6 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 					.solve({ challenge, solution: body.solution })
 					.then((response: IChallengeSolveResult) => {
 						return plainToClass(ChallengeSolveResponseDTO, response, {
-							// eslint-disable-next-line @elsikora/typescript/naming-convention
 							excludeExtraneousValues: true,
 						});
 					})
@@ -120,7 +119,6 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 			.get({ where: { client: { id: request.user.id }, id: parameters.challenge, token: body.token } })
 			.then((challenge: Challenge) => {
 				return plainToClass(ChallengeVerifyResponseDTO, this.service.verify({ challenge }), {
-					// eslint-disable-next-line @elsikora/typescript/naming-convention
 					excludeExtraneousValues: true,
 				});
 			})

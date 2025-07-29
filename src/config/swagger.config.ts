@@ -51,9 +51,8 @@ export default class ConfigSwagger {
 
 		SwaggerModule.setup("api", this.APPLICATION, document, {
 			swaggerOptions: {
-				// eslint-disable-next-line @elsikora/typescript/naming-convention
 				deepScanRoutes: CONFIG_SWAGGER_CONSTANT.SHOULD_DEEP_SCAN_ROUTES,
-				// eslint-disable-next-line @elsikora/typescript/naming-convention
+
 				displayRequestDuration: CONFIG_SWAGGER_CONSTANT.SHOULD_DISPLAY_REQUEST_DURATION,
 				operationsSorter: CONFIG_SWAGGER_CONSTANT.OPERATIONS_SORTER,
 				tagsSorter: CONFIG_SWAGGER_CONSTANT.TAGS_SORTER,

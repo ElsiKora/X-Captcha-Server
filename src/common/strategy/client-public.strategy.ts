@@ -18,7 +18,7 @@ export default class ClientPublicStrategy extends PassportStrategy(Strategy, "cl
 		super();
 	}
 
-	async validate(request: Request): Promise<any> {
+	async validate(request: Request): Promise<Client> {
 		const publicKey: string = request.headers["x-public-key"] as string;
 
 		return this.validateRequestData(publicKey)
