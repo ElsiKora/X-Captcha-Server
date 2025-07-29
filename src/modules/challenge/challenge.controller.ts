@@ -1,4 +1,4 @@
-import { ApiController, ApiMethod, EApiAction, EApiAuthenticationType, EApiControllerRequestTransformerType, EApiDtoType, EApiRouteType, IApiControllerBase, IApiControllerProperties, TRANSFORMER_VALUE_DTO_CONSTANT } from "@elsikora/nestjs-crud-automator";
+import { ApiController, ApiControllerObservable, ApiMethod, EApiAction, EApiAuthenticationType, EApiControllerRequestTransformerType, EApiDtoType, EApiRouteType, IApiControllerBase, IApiControllerProperties, TRANSFORMER_VALUE_DTO_CONSTANT } from "@elsikora/nestjs-crud-automator";
 import { Body, HttpStatus, Param, Req, RequestMethod } from "@nestjs/common";
 import { plainToClass } from "class-transformer";
 
@@ -7,7 +7,7 @@ import ClientSecretGuard from "../../common/guard/client-secret.guard";
 import { IApiAuthRequestClientPublic } from "../../shared/interface/api/auth-request-client-public.interface";
 import { IApiAuthRequestClientSecret } from "../../shared/interface/api/auth-request-client-secret.interface";
 
-import ChallengeService from "./challenge.service";
+import { ChallengeService } from "./challenge.service";
 import { ChallengeSolveRequestBodyDTO } from "./dto/solve-request-body.dto";
 import { ChallengeSolveRequestParametersDTO } from "./dto/solve-request-parameters.dto";
 import { ChallengeSolveResponseDTO } from "./dto/solve-response.dto";
@@ -61,7 +61,8 @@ const config: IApiControllerProperties<Challenge> = {
 	},
 };
 
-@ApiController<Challenge>(config)
+@ApiController(config)
+@ApiControllerObservable()
 export class ChallengeController implements IApiControllerBase<Challenge> {
 	constructor(public service: ChallengeService) {}
 
@@ -87,7 +88,6 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 					.solve({ challenge, solution: body.solution })
 					.then((response: IChallengeSolveResult) => {
 						return plainToClass(ChallengeSolveResponseDTO, response, {
-							// eslint-disable-next-line @elsikora/typescript/naming-convention
 							excludeExtraneousValues: true,
 						});
 					})
@@ -119,7 +119,6 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 			.get({ where: { client: { id: request.user.id }, id: parameters.challenge, token: body.token } })
 			.then((challenge: Challenge) => {
 				return plainToClass(ChallengeVerifyResponseDTO, this.service.verify({ challenge }), {
-					// eslint-disable-next-line @elsikora/typescript/naming-convention
 					excludeExtraneousValues: true,
 				});
 			})
