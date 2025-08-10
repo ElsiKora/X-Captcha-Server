@@ -47,7 +47,7 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 			}
 
 			case ECaptchaType.POW: {
-				const powCaptchaDifficulty: IConfigData = await this.crudConfigService.get({ name: "captchaTtlMs", section: "challenge" });
+				const powCaptchaDifficulty: IConfigData = await this.crudConfigService.get({ name: "powCaptchaDifficulty", section: "challenge" });
 
 				return this.update(
 					{ id: challenge.id },
