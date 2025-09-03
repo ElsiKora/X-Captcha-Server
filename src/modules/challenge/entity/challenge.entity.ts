@@ -108,6 +108,25 @@ export class Challenge {
 	isSolved!: boolean;
 
 	@ApiPropertyDescribe({
+		description: "verified state",
+		properties: {
+			[EApiRouteType.CREATE]: {
+				[EApiDtoType.BODY]: {
+					isEnabled: false,
+					isRequired: false,
+				},
+				[EApiDtoType.RESPONSE]: {
+					isEnabled: false,
+					isRequired: false,
+				},
+			},
+		},
+		type: EApiPropertyDescribeType.BOOLEAN,
+	})
+	@Column({ default: false, nullable: false })
+	isVerified!: boolean;
+
+	@ApiPropertyDescribe({
 		dataType: { [ECaptchaType.CLICK]: ChallengeSolutionClickDynamicDto, [ECaptchaType.POW]: ChallengeSolutionPowDynamicDto },
 		description: "solution",
 		discriminator: {
