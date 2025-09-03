@@ -47,7 +47,7 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 			}
 
 			case ECaptchaType.POW: {
-				const powCaptchaDifficulty: IConfigData = await this.crudConfigService.get({ name: "captchaTtlMs", section: "challenge" });
+				const powCaptchaDifficulty: IConfigData = await this.crudConfigService.get({ name: "powCaptchaDifficulty", section: "challenge" });
 
 				return this.update(
 					{ id: challenge.id },
@@ -102,8 +102,14 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 		return { token: challenge.token };
 	}
 
-	verify(properties: IChallengeVerifyProperties): IChallengeVerifyResult {
+	async verify(properties: IChallengeVerifyProperties): Promise<IChallengeVerifyResult> {
 		const { challenge }: IChallengeVerifyProperties = properties;
+
+		if (challenge.isVerified) {
+			throw new ConflictException(ErrorString({ entity: Challenge, type: EErrorStringAction.ALREADY_PROCESSED }));
+		}
+
+		await this.update({ id: challenge.id }, { isVerified: true });
 
 		return { isSolved: challenge.isSolved };
 	}
