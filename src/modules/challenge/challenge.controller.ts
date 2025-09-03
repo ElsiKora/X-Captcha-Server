@@ -111,15 +111,14 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 		httpCode: HttpStatus.OK,
 		method: RequestMethod.POST,
 		path: ":challenge/verify",
-		responses: { hasBadRequest: true, hasConflict: true, hasInternalServerError: true, hasNotFound: true, hasUnauthorized: true },
+		responses: { hasBadRequest: true, hasInternalServerError: true, hasNotFound: true, hasUnauthorized: true },
 		responseType: ChallengeVerifyResponseDTO,
 	})
 	verify(@Req() request: IApiAuthRequestClientSecret, @Param() parameters: ChallengeVerifyRequestParametersDTO, @Body() body: ChallengeVerifyRequestBodyDTO): Promise<ChallengeVerifyResponseDTO> {
 		return this.service
 			.get({ where: { client: { id: request.user.id }, id: parameters.challenge, token: body.token } })
-			.then(async (challenge: Challenge) => {
-				const verifyResult = await this.service.verify({ challenge });
-				return plainToClass(ChallengeVerifyResponseDTO, verifyResult, {
+			.then((challenge: Challenge) => {
+				return plainToClass(ChallengeVerifyResponseDTO, this.service.verify({ challenge }), {
 					excludeExtraneousValues: true,
 				});
 			})
