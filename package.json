@@ -46,7 +46,7 @@
 	"dependencies": {
 		"@aws-sdk/client-cloudwatch-logs": "^3.859.0",
 		"@elsikora/nestjs-aws-parameter-store-config": "^1.2.14",
-		"@elsikora/nestjs-crud-automator": "1.17.1",
+		"@elsikora/nestjs-crud-automator": "1.10.4",
 		"@elsikora/nestjs-crud-config": "1.1.4",
 		"@elsikora/nestjs-typeorm-aws-connector": "^1.3.1",
 		"@fastify/static": "^10.1.6",
