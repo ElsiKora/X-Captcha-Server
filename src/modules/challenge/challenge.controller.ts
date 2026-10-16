@@ -1,5 +1,6 @@
 import { ApiController, ApiControllerObservable, ApiMethod, EApiAction, EApiAuthenticationType, EApiControllerRequestTransformerType, EApiDtoType, EApiRouteType, IApiControllerBase, IApiControllerProperties, TRANSFORMER_VALUE_DTO_CONSTANT } from "@elsikora/nestjs-crud-automator";
 import { Body, HttpStatus, Param, Req, RequestMethod } from "@nestjs/common";
+import { SkipThrottle } from "@nestjs/throttler";
 import { plainToClass } from "class-transformer";
 
 import ClientPublicGuard from "../../common/guard/client-public.guard";
@@ -114,16 +115,12 @@ export class ChallengeController implements IApiControllerBase<Challenge> {
 		responses: { hasBadRequest: true, hasInternalServerError: true, hasNotFound: true, hasUnauthorized: true },
 		responseType: ChallengeVerifyResponseDTO,
 	})
-	verify(@Req() request: IApiAuthRequestClientSecret, @Param() parameters: ChallengeVerifyRequestParametersDTO, @Body() body: ChallengeVerifyRequestBodyDTO): Promise<ChallengeVerifyResponseDTO> {
-		return this.service
-			.get({ where: { client: { id: request.user.id }, id: parameters.challenge, token: body.token } })
-			.then((challenge: Challenge) => {
-				return plainToClass(ChallengeVerifyResponseDTO, this.service.verify({ challenge }), {
-					excludeExtraneousValues: true,
-				});
-			})
-			.catch((error: unknown) => {
-				throw error;
-			});
+	@SkipThrottle()
+	async verify(@Req() request: IApiAuthRequestClientSecret, @Param() parameters: ChallengeVerifyRequestParametersDTO, @Body() body: ChallengeVerifyRequestBodyDTO): Promise<ChallengeVerifyResponseDTO> {
+		const challenge: Challenge = await this.service.get({ where: { client: { id: request.user.id }, id: parameters.challenge, token: body.token } });
+
+		return plainToClass(ChallengeVerifyResponseDTO, await this.service.verify({ challenge }), {
+			excludeExtraneousValues: true,
+		});
 	}
 }

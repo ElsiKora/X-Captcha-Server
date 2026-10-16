@@ -4,7 +4,9 @@ import { CrudConfigModule, TOKEN_CONSTANT } from "@elsikora/nestjs-crud-config";
 import { TypeOrmAwsConnectorModule, TypeOrmAwsConnectorService } from "@elsikora/nestjs-typeorm-aws-connector";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { APP_GUARD } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { ChallengeModule } from "./modules/challenge/challenge.module";
@@ -66,6 +68,12 @@ import CONFIG_CONSTANT from "./shared/constant/config.constant";
 				};
 			},
 		}),
+		ThrottlerModule.forRoot([
+			{
+				limit: CONFIG_CONSTANT.THROTTLE_LIMIT,
+				ttl: CONFIG_CONSTANT.THROTTLE_TTL_MS,
+			},
+		]),
 		TypeOrmAwsConnectorModule.registerAsync({
 			imports: [ConfigModule, CrudConfigModule],
 			inject: [TOKEN_CONSTANT.CONFIG_SECTION_ENTITY, TOKEN_CONSTANT.CONFIG_DATA_ENTITY, TOKEN_CONSTANT.CONFIG_MIGRATION_ENTITY],
@@ -95,6 +103,12 @@ import CONFIG_CONSTANT from "./shared/constant/config.constant";
 				};
 			},
 		}),
+	],
+	providers: [
+		{
+			provide: APP_GUARD,
+			useClass: ThrottlerGuard,
+		},
 	],
 })
 export class AppModule {}

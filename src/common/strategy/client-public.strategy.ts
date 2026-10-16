@@ -2,54 +2,39 @@ import type { Request } from "express";
 
 import { EErrorStringAction } from "@elsikora/nestjs-crud-automator";
 import { ErrorString } from "@elsikora/nestjs-crud-automator";
-import { BadRequestException, HttpException, Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from "passport-custom";
 
 import ClientService from "../../modules/client/client.service";
 import { Client } from "../../modules/client/entity/client.entity";
+import { readClientKeyHeader } from "../utility/read-client-key-header.utility";
 
 @Injectable()
 export default class ClientPublicStrategy extends PassportStrategy(Strategy, "client-public-guard") {
-	constructor(
-		private readonly service: ClientService,
-		// private readonly configService: ConfigService,
-	) {
+	constructor(private readonly service: ClientService) {
 		super();
 	}
 
 	async validate(request: Request): Promise<Client> {
-		const publicKey: string = request.headers["x-public-key"] as string;
+		const publicKey: string | undefined = readClientKeyHeader(request.headers["x-public-key"]);
 
-		return this.validateRequestData(publicKey)
-			.then((client: Client) => {
-				return client;
-			})
-			.catch((error: unknown) => {
-				if (error instanceof BadRequestException) {
-					throw error;
-				}
-
-				throw new UnauthorizedException();
-			});
-	}
-
-	validateRequestData(publicKey: string): Promise<Client> {
-		if (publicKey == undefined || !publicKey || publicKey.length === 0) {
+		if (!publicKey) {
 			throw new UnauthorizedException();
 		}
 
-		return this.service
-			.get({ where: { isActive: true, publicKey } })
-			.then((client: Client) => {
-				return client;
-			})
-			.catch((error: unknown) => {
-				if (error instanceof HttpException) {
-					throw error;
-				}
+		let client: Client | undefined;
 
-				throw new InternalServerErrorException(ErrorString({ entity: Client, type: EErrorStringAction.FETCHING_ERROR }));
-			});
+		try {
+			client = await this.service.getActiveByKey("publicKey", publicKey);
+		} catch {
+			throw new InternalServerErrorException(ErrorString({ entity: Client, type: EErrorStringAction.FETCHING_ERROR }));
+		}
+
+		if (!client) {
+			throw new UnauthorizedException();
+		}
+
+		return client;
 	}
 }

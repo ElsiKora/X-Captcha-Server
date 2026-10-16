@@ -4,6 +4,10 @@ export default {
 		commands.push("prettier --write --ignore-unknown");
 
 		const eslintFiles = files.filter((fileName) => {
+			if (fileName.endsWith("package-lock.json")) {
+				return false;
+			}
+
 			const validExtensions = ["js", "jsx", "mjs", "cjs", "ts", "tsx", "json", "jsonc", "yml", "yaml"];
 			const fileExtension = fileName.split(".").pop();
 			const hasValidExtension = validExtensions.includes(fileExtension);
