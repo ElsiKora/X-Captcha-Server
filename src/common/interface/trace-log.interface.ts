@@ -6,7 +6,7 @@ export default interface ITraceLog {
 	method: string;
 	path: string;
 	queryParams: {};
-	request: string;
+	request: unknown;
 	requestTimestamp?: number;
 	signature?: string;
 	statusCode: number;

@@ -11,7 +11,7 @@ export const ChallengeDataPowDynamicDto: Record<string, TApiPropertyDescribeProp
 		format: EApiPropertyStringType.LOWERCASE_STRING,
 		maxLength: 32,
 		minLength: 32,
-		pattern: "/^[a-f0-9]{32}/",
+		pattern: "/^[a-f0-9]{32}$/",
 		type: EApiPropertyDescribeType.STRING,
 	},
 	difficulty: {
