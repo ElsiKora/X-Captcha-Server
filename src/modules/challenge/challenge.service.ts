@@ -9,6 +9,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, UpdateResult } from "typeorm";
 import { EntityManager } from "typeorm/entity-manager/EntityManager";
 
+import CONFIG_CONSTANT from "../../shared/constant/config.constant";
+import NUMBER_CONSTANT from "../../shared/constant/number.constant";
 import { ECaptchaType } from "../../shared/enum/captcha-type.enum";
 
 import { Challenge } from "./entity/challenge.entity";
@@ -117,7 +119,8 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 			throw new ConflictException(ErrorString({ entity: Challenge, type: EErrorStringAction.ALREADY_PROCESSED }));
 		}
 
-		return { isSolved: challenge.isSolved };
+		// The token is burned either way; an expired solution is reported exactly like an unsolved one.
+		return { isSolved: challenge.isSolved && !this.isSolutionExpired(challenge) };
 	}
 
 	private calculateHash(challenge: string, nonce: number): string {
@@ -125,6 +128,22 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 			.createHash("sha256")
 			.update(`${challenge}${String(nonce)}`)
 			.digest("hex");
+	}
+
+	/**
+	 * Whether a solved challenge is too old to be verified.
+	 * `updatedAt` is the solve time: the conditional UPDATE in solve() is the last write before verify (TypeORM sets `updatedAt` on every update).
+	 * @param {Challenge} challenge The challenge as loaded before verify updates it
+	 * @returns {boolean} True when the solution is older than the TTL or its time is unknown
+	 */
+	private isSolutionExpired(challenge: Challenge): boolean {
+		const solvedAt: number = new Date(challenge.updatedAt).getTime();
+
+		if (!Number.isFinite(solvedAt)) {
+			return true;
+		}
+
+		return Date.now() - solvedAt > CONFIG_CONSTANT.CHALLENGE_SOLUTION_TTL_SECONDS * NUMBER_CONSTANT.MILLISECONDS_IN_SECOND;
 	}
 
 	private isValidPowSolution(data: IChallengeDataPow, solution: IChallengeSolutionPow): boolean {
