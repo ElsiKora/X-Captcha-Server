@@ -111,3 +111,106 @@ void describe("ChallengeService.verify solution TTL (default 120 s)", () => {
 		await assert.rejects(service.verify({ challenge: createChallenge({}) }), ConflictException);
 	});
 });
+
+void describe("ChallengeService challenge config cache", () => {
+	interface IGetCall {
+		eventManager: unknown;
+		name: string;
+	}
+
+	function createConfigService(values: Array<Error | string>): { calls: Array<IGetCall>; configService: CrudConfigService } {
+		const calls: Array<IGetCall> = [];
+
+		const configService: Partial<CrudConfigService> = {
+			get: (options: { eventManager?: unknown; name: string }) => {
+				calls.push({ eventManager: options.eventManager, name: options.name });
+				const next: Error | string | undefined = values.shift();
+
+				return next instanceof Error ? Promise.reject(next) : Promise.resolve({ value: next ?? "" } as never);
+			},
+		};
+
+		return { calls, configService: configService as CrudConfigService };
+	}
+
+	const flush = (): Promise<void> => new Promise((resolve: () => void) => setImmediate(resolve));
+
+	void it("reads each value once and reuses it, sharing concurrent reads", async () => {
+		const { calls, configService } = createConfigService(["5", "60000"]);
+		const service: ChallengeService = new ChallengeService({} as Repository<Challenge>, configService);
+
+		const [first, second] = await Promise.all([service["getChallengeConfigValue"]("powCaptchaDifficulty"), service["getChallengeConfigValue"]("powCaptchaDifficulty")]);
+		const third: string = await service["getChallengeConfigValue"]("powCaptchaDifficulty");
+		const ttl: string = await service["getChallengeConfigValue"]("captchaTtlMs");
+
+		assert.deepEqual([first, second, third, ttl], ["5", "5", "5", "60000"]);
+		assert.deepEqual(
+			calls.map((call: IGetCall) => call.name),
+			["powCaptchaDifficulty", "captchaTtlMs"],
+		);
+	});
+
+	void it("reads a cache miss through the caller's transaction instead of a second pool connection", async () => {
+		const { calls, configService } = createConfigService(["5"]);
+		const service: ChallengeService = new ChallengeService({} as Repository<Challenge>, configService);
+		const transaction: object = { name: "transaction-manager" };
+
+		await service["getChallengeConfigValue"]("powCaptchaDifficulty", transaction as never);
+
+		assert.equal(calls[0]?.eventManager, transaction);
+	});
+
+	void it("does not cache a failed first read", async () => {
+		const { calls, configService } = createConfigService([new Error("db down"), "5"]);
+		const service: ChallengeService = new ChallengeService({} as Repository<Challenge>, configService);
+
+		await assert.rejects(service["getChallengeConfigValue"]("powCaptchaDifficulty"), /db down/);
+		assert.equal(await service["getChallengeConfigValue"]("powCaptchaDifficulty"), "5");
+		assert.equal(calls.length, 2);
+	});
+
+	void it("serves the stale value after expiry while one background read refreshes it", async () => {
+		const { calls, configService } = createConfigService(["5", "6"]);
+		const service: ChallengeService = new ChallengeService({} as Repository<Challenge>, configService);
+
+		assert.equal(await service["getChallengeConfigValue"]("powCaptchaDifficulty"), "5");
+		service["CONFIG_CACHE"].get("powCaptchaDifficulty")!.expiresAt = Date.now() - 1;
+
+		const during: Array<string> = await Promise.all([service["getChallengeConfigValue"]("powCaptchaDifficulty"), service["getChallengeConfigValue"]("powCaptchaDifficulty")]);
+		await flush();
+
+		assert.deepEqual(during, ["5", "5"]);
+		assert.equal(await service["getChallengeConfigValue"]("powCaptchaDifficulty"), "6");
+		assert.equal(calls.length, 2);
+		assert.equal(calls[1]?.eventManager, undefined, "background refresh must not use a request transaction");
+	});
+
+	void it("keeps the stale value when a refresh fails", async () => {
+		const { calls, configService } = createConfigService(["5", new Error("db down"), "7"]);
+		const service: ChallengeService = new ChallengeService({} as Repository<Challenge>, configService);
+
+		await service["getChallengeConfigValue"]("powCaptchaDifficulty");
+		service["CONFIG_CACHE"].get("powCaptchaDifficulty")!.expiresAt = Date.now() - 1;
+
+		assert.equal(await service["getChallengeConfigValue"]("powCaptchaDifficulty"), "5");
+		await flush();
+		assert.equal(await service["getChallengeConfigValue"]("powCaptchaDifficulty"), "5");
+		await flush();
+		assert.equal(await service["getChallengeConfigValue"]("powCaptchaDifficulty"), "7");
+		assert.equal(calls.length, 3);
+	});
+
+	void it("preloads the challenge config on bootstrap and tolerates a failure", async () => {
+		const { calls, configService } = createConfigService(["60000", new Error("missing")]);
+		const service: ChallengeService = new ChallengeService({} as Repository<Challenge>, configService);
+
+		await service.onApplicationBootstrap();
+
+		assert.deepEqual(
+			calls.map((call: IGetCall) => call.name),
+			["captchaTtlMs", "powCaptchaDifficulty"],
+		);
+		assert.equal(service["CONFIG_CACHE"].get("captchaTtlMs")?.value, "60000");
+		assert.equal(service["CONFIG_CACHE"].has("powCaptchaDifficulty"), false);
+	});
+});

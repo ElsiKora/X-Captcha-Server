@@ -79,6 +79,7 @@ void describe("CONFIG_CONSTANT environment overrides", () => {
 		assert.equal(constant.DB_POOL_SIZE, 20);
 		assert.equal(constant.THROTTLE_LIMIT, 60);
 		assert.equal(constant.CHALLENGE_SOLUTION_TTL_SECONDS, 120);
+		assert.equal(constant.CHALLENGE_CONFIG_CACHE_SECONDS, 30);
 		assert.equal(constant.IS_DATABASE_SYNCHRONIZATION_ENABLED, false);
 		assert.equal(constant.IS_CLUSTER_LEADER, true);
 		assert.equal(constant.CLUSTER_WORKER_COUNT, os.cpus().length);

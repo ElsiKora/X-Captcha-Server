@@ -27,6 +27,8 @@ const CLUSTER_WORKER_COUNT: number = readEnvironmentPositiveInteger("CLUSTER_WOR
 const CLUSTER_FORK_STAGGER_MS: number = readEnvironmentPositiveInteger("CLUSTER_FORK_STAGGER_MS", 300);
 // How long a solved challenge token stays valid for verify, counted from the moment it was solved.
 const CHALLENGE_SOLUTION_TTL_SECONDS: number = readEnvironmentPositiveInteger("CHALLENGE_SOLUTION_TTL_SECONDS", 120);
+// How long a worker reuses the decrypted challenge config (difficulty, captcha TTL) before reading it again.
+const CHALLENGE_CONFIG_CACHE_SECONDS: number = readEnvironmentPositiveInteger("CHALLENGE_CONFIG_CACHE_SECONDS", 30);
 const DB_TYPE: EDatabaseType = EDatabaseType.POSTGRES;
 const IS_DATABASE_LOGGING_ENABLED: boolean = false;
 const DB_DATABASE_NAME: string = "app";
@@ -34,6 +36,7 @@ const DATABASE_CONNECTION_ROTATION_INTERVAL: number = 600_000;
 const IS_DATABASE_CONNECTION_ROTATION_ENABLED: boolean = true;
 
 const CONFIG_CONSTANT: {
+	readonly CHALLENGE_CONFIG_CACHE_SECONDS: number;
 	readonly CHALLENGE_SOLUTION_TTL_SECONDS: number;
 	readonly CLUSTER_FORK_STAGGER_MS: number;
 	readonly CLUSTER_WORKER_COUNT: number;
@@ -56,6 +59,7 @@ const CONFIG_CONSTANT: {
 	readonly THROTTLE_LIMIT: number;
 	readonly THROTTLE_TTL_MS: number;
 } = {
+	CHALLENGE_CONFIG_CACHE_SECONDS,
 	CHALLENGE_SOLUTION_TTL_SECONDS,
 	CLUSTER_FORK_STAGGER_MS,
 	CLUSTER_WORKER_COUNT,

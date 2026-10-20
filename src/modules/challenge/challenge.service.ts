@@ -4,7 +4,7 @@ import * as crypto from "node:crypto";
 
 import { ApiService, ApiServiceBase, ApiServiceObservable, EErrorStringAction, EErrorStringCompositeAction, ErrorString } from "@elsikora/nestjs-crud-automator";
 import { CrudConfigService } from "@elsikora/nestjs-crud-config";
-import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, UpdateResult } from "typeorm";
 import { EntityManager } from "typeorm/entity-manager/EntityManager";
@@ -25,16 +25,42 @@ import { IChallengeVerifyResult } from "./interface/verify-result.interface";
 const POW_HASH_PATTERN: RegExp = /^[0-9a-f]{64}$/;
 const POW_NONCE_PATTERN: RegExp = /^(?:0|[1-9]\d{0,14})$/;
 
+const CHALLENGE_CONFIG_NAMES: ReadonlyArray<string> = ["captchaTtlMs", "powCaptchaDifficulty"];
+
+interface IConfigCacheEntry {
+	expiresAt: number;
+	value: string;
+}
+
 @ApiService({ entity: Challenge })
 @ApiServiceObservable()
 @Injectable()
-export class ChallengeService extends ApiServiceBase<Challenge> {
+export class ChallengeService extends ApiServiceBase<Challenge> implements OnApplicationBootstrap {
+	private readonly CONFIG_CACHE: Map<string, IConfigCacheEntry> = new Map<string, IConfigCacheEntry>();
+
+	private readonly CONFIG_LOADS: Map<string, Promise<string>> = new Map<string, Promise<string>>();
+
+	private readonly LOGGER: Logger = new Logger(ChallengeService.name);
+
 	constructor(
 		@InjectRepository(Challenge)
 		private readonly repository: Repository<Challenge>,
 		private readonly crudConfigService: CrudConfigService,
 	) {
 		super();
+	}
+
+	/**
+	 * Loads the challenge config before the worker starts listening, so requests do not hit a cold cache.
+	 */
+	async onApplicationBootstrap(): Promise<void> {
+		await Promise.all(
+			CHALLENGE_CONFIG_NAMES.map((name: string) =>
+				this.getChallengeConfigValue(name).catch((error: unknown) => {
+					this.LOGGER.warn(`Could not preload challenge config "${name}", it will be read on first use: ${error instanceof Error ? error.message : String(error)}`);
+				}),
+			),
+		);
 	}
 
 	async setUpChallenge(challenge: Challenge, eventManager: EntityManager): Promise<Challenge> {
@@ -53,14 +79,15 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 			}
 
 			case ECaptchaType.POW: {
-				const powCaptchaDifficulty: IConfigData = await this.crudConfigService.get({ name: "powCaptchaDifficulty", section: "challenge" });
+				// Runs inside the insert transaction: a cache miss must read through its connection, not wait for a second one from the pool.
+				const powCaptchaDifficulty: string = await this.getChallengeConfigValue("powCaptchaDifficulty", eventManager);
 
 				return this.update(
 					{ id: challenge.id },
 					{
 						data: {
 							challenge: crypto.randomBytes(16).toString("hex"),
-							difficulty: Number.parseInt(powCaptchaDifficulty.value),
+							difficulty: Number.parseInt(powCaptchaDifficulty),
 							type: ECaptchaType.POW,
 						},
 					},
@@ -87,9 +114,9 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 			throw new BadRequestException(ErrorString({ entity: Challenge, property: "SOLUTION", type: EErrorStringCompositeAction.INVALID_FORMAT }));
 		}
 
-		const captchaTtlMs: IConfigData = await this.crudConfigService.get({ name: "captchaTtlMs", section: "challenge" });
+		const captchaTtlMs: string = await this.getChallengeConfigValue("captchaTtlMs");
 
-		if (+new Date(challenge.createdAt) + Number.parseInt(captchaTtlMs.value) < Date.now()) {
+		if (+new Date(challenge.createdAt) + Number.parseInt(captchaTtlMs) < Date.now()) {
 			throw new BadRequestException(ErrorString({ entity: Challenge, type: EErrorStringAction.EXPIRED }));
 		}
 
@@ -131,6 +158,33 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 	}
 
 	/**
+	 * Reads a value of the "challenge" config section through a per-process cache.
+	 *
+	 * Values are stored encrypted, and every uncached read costs two queries plus a synchronous scrypt key derivation
+	 * (tens of ms of blocked event loop). Once a value is cached, requests never wait for the database again:
+	 * after CHALLENGE_CONFIG_CACHE_SECONDS the stale value is still returned while one background read refreshes it,
+	 * and a failed refresh keeps the stale value.
+	 * @param {string} name Config name in the "challenge" section
+	 * @param {EntityManager} [eventManager] Transaction to read through on a cache miss
+	 * @returns {Promise<string>} The decrypted value
+	 */
+	private async getChallengeConfigValue(name: string, eventManager?: EntityManager): Promise<string> {
+		const cached: IConfigCacheEntry | undefined = this.CONFIG_CACHE.get(name);
+
+		if (!cached) {
+			return this.loadChallengeConfigValue(name, eventManager);
+		}
+
+		if (cached.expiresAt <= Date.now() && !this.CONFIG_LOADS.has(name)) {
+			this.loadChallengeConfigValue(name).catch((error: unknown) => {
+				this.LOGGER.warn(`Could not refresh challenge config "${name}", keeping the cached value: ${error instanceof Error ? error.message : String(error)}`);
+			});
+		}
+
+		return cached.value;
+	}
+
+	/**
 	 * Whether a solved challenge is too old to be verified.
 	 * `updatedAt` is the solve time: the conditional UPDATE in solve() is the last write before verify (TypeORM sets `updatedAt` on every update).
 	 * @param {Challenge} challenge The challenge as loaded before verify updates it
@@ -154,6 +208,29 @@ export class ChallengeService extends ApiServiceBase<Challenge> {
 		const calculatedHash: string = this.calculateHash(data.challenge, Number.parseInt(solution.nonce, 10));
 
 		return calculatedHash === solution.hash && calculatedHash.startsWith("0".repeat(data.difficulty));
+	}
+
+	private loadChallengeConfigValue(name: string, eventManager?: EntityManager): Promise<string> {
+		const inFlight: Promise<string> | undefined = this.CONFIG_LOADS.get(name);
+
+		if (inFlight) {
+			return inFlight;
+		}
+
+		const load: Promise<string> = this.crudConfigService
+			.get({ eventManager, name, section: "challenge" })
+			.then((data: IConfigData) => {
+				this.CONFIG_CACHE.set(name, { expiresAt: Date.now() + CONFIG_CONSTANT.CHALLENGE_CONFIG_CACHE_SECONDS * NUMBER_CONSTANT.MILLISECONDS_IN_SECOND, value: data.value });
+
+				return data.value;
+			})
+			.finally(() => {
+				this.CONFIG_LOADS.delete(name);
+			});
+
+		this.CONFIG_LOADS.set(name, load);
+
+		return load;
 	}
 
 	private normalizeSolution(solution: unknown): IChallengeSolutionClick | IChallengeSolutionPow {
