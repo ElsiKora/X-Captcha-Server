@@ -29,7 +29,8 @@
 		"start:debug": "nest start --debug --watch",
 		"start:dev": "NODE_ENV=development nest start --watch",
 		"start:generate-swagger": "NODE_ENV=generate-swagger node dist/main.js",
-		"start:prod": "NODE_ENV=production node dist/main.js"
+		"start:prod": "NODE_ENV=production node dist/main.js",
+		"test": "rimraf dist-test && tsc -p tsconfig.spec.json && node --test --test-concurrency=1 \"dist-test/**/*.spec.js\""
 	},
 	"config": {
 		"commitizen": {
