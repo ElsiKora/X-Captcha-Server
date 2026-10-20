@@ -4,8 +4,8 @@ export default {
 		commands.push("prettier --write --ignore-unknown");
 
 		const eslintFiles = files.filter((fileName) => {
-			// Lockfiles are generated: no-secrets flags every integrity hash in them.
-			if (fileName.endsWith("package-lock.json")) {
+			// Lockfiles are generated (no-secrets flags every integrity hash in them); spec files are ignored by eslint.config.mjs and excluded from tsconfig.json.
+			if (fileName.endsWith("package-lock.json") || fileName.endsWith(".spec.ts")) {
 				return false;
 			}
 
