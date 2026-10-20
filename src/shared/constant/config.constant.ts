@@ -9,8 +9,9 @@ import { readEnvironmentBoolean, readEnvironmentPositiveInteger } from "../utili
 const IS_CLUSTER_LEADER: boolean = cluster.isPrimary || process.env.CLUSTER_ROLE === "leader";
 
 const SWAGGER_SAVE_SPACES: number = 2;
-const DB_CONNECTION_TIMEOUT: number = 2000;
-const DB_IDLE_TIMEOUT: number = 30_000;
+// How long a request waits for a free pool connection before failing.
+const DB_CONNECTION_TIMEOUT: number = readEnvironmentPositiveInteger("DB_CONNECTION_TIMEOUT_MS", 2000);
+const DB_IDLE_TIMEOUT: number = readEnvironmentPositiveInteger("DB_IDLE_TIMEOUT_MS", 30_000);
 const DB_RECONNECT_TIMEOUT: number = 3000;
 // Per process: each cluster worker opens its own pool.
 const DB_POOL_SIZE: number = readEnvironmentPositiveInteger("DB_POOL_SIZE", 20);

@@ -77,6 +77,8 @@ void describe("CONFIG_CONSTANT environment overrides", () => {
 		const constant: Record<string, unknown> = readConstant({});
 
 		assert.equal(constant.DB_POOL_SIZE, 20);
+		assert.equal(constant.DB_CONNECTION_TIMEOUT, 2000);
+		assert.equal(constant.DB_IDLE_TIMEOUT, 30_000);
 		assert.equal(constant.THROTTLE_LIMIT, 60);
 		assert.equal(constant.CHALLENGE_SOLUTION_TTL_SECONDS, 120);
 		assert.equal(constant.CHALLENGE_CONFIG_CACHE_SECONDS, 30);
@@ -86,9 +88,11 @@ void describe("CONFIG_CONSTANT environment overrides", () => {
 	});
 
 	void it("reads the overrides", () => {
-		const constant: Record<string, unknown> = readConstant({ CHALLENGE_SOLUTION_TTL_SECONDS: "30", CLUSTER_WORKER_COUNT: "8", DB_POOL_SIZE: "35", IS_DATABASE_SYNCHRONIZATION_ENABLED: "true", THROTTLE_LIMIT: "100" });
+		const constant: Record<string, unknown> = readConstant({ CHALLENGE_SOLUTION_TTL_SECONDS: "30", CLUSTER_WORKER_COUNT: "8", DB_CONNECTION_TIMEOUT_MS: "5000", DB_IDLE_TIMEOUT_MS: "10000", DB_POOL_SIZE: "35", IS_DATABASE_SYNCHRONIZATION_ENABLED: "true", THROTTLE_LIMIT: "100" });
 
 		assert.equal(constant.DB_POOL_SIZE, 35);
+		assert.equal(constant.DB_CONNECTION_TIMEOUT, 5000);
+		assert.equal(constant.DB_IDLE_TIMEOUT, 10_000);
 		assert.equal(constant.THROTTLE_LIMIT, 100);
 		assert.equal(constant.CHALLENGE_SOLUTION_TTL_SECONDS, 30);
 		assert.equal(constant.CLUSTER_WORKER_COUNT, 8);
