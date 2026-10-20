@@ -45,7 +45,7 @@ import CONFIG_CONSTANT from "./shared/constant/config.constant";
 						migrations: [
 							// initialAppConfigMigration,
 						],
-						shouldRunOnStartup: true,
+						shouldRunOnStartup: CONFIG_CONSTANT.IS_CONFIG_MIGRATION_ENABLED,
 						useTransaction: true,
 					},
 					shouldAutoCreateSections: true,
